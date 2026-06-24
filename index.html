@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festivais de Portugal 2026 - Premium Dashboard</title>
+    
+    <!-- Google Fonts & Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet & MarkerCluster CDNs -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #FFFFFF;
+            overflow: hidden;
+        }
+        /* Scrollbar Spotify Style */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #121212; }
+        ::-webkit-scrollbar-thumb { background: #282828; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3e3e3e; }
+        
+        .leaflet-container { background: #121212 !important; }
+        
+        /* Glassmorphism popups */
+        .leaflet-popup-content-wrapper {
+            background: rgba(30, 30, 30, 0.95) !important;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+        }
+        .leaflet-popup-tip { background: rgba(30, 30, 30, 0.95) !important; }
+        
+        .custom-cluster {
+            background: rgba(29, 185, 84, 0.2);
+            border: 2px solid #1DB954;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 0 0 15px #1DB954;
+            transition: transform 0.2s ease;
+        }
+        
+        .festival-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .festival-card.active-card {
+            border-color: #1DB954 !important;
+            background: rgba(29, 185, 84, 0.1) !important;
+            box-shadow: 0 0 15px rgba(29, 185, 84, 0.1);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="h-16 border-b border-[#282828] bg-[#121212] flex items-center justify-between px-6 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-[#1DB954] rounded-full flex items-center justify-center shadow-lg shadow-[#1DB954]/20">
+                <i class="fa-solid fa-compact-disc text-black animate-spin-slow"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight">Festivais<span class="text-[#1DB954]">Portugal</span></span>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="bg-[#1E1E1E] border border-zinc-800 px-4 py-1.5 rounded-full flex items-center gap-3">
+                <span class="text-xs text-[#B3B3B3] font-medium uppercase tracking-wider">Resultados</span>
+                <span id="counter-total" class="text-lg font-bold text-[#1DB954]">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden w-full relative">
+        
+        <!-- SIDEBAR ESQUERDA: Filtros -->
+        <aside class="w-80 bg-[#1E1E1E] border-r border-[#282828] flex flex-col p-5 gap-6 overflow-y-auto">
+            <div>
+                <label class="text-xs font-semibold uppercase text-[#B3B3B3] tracking-widest block mb-2">Pesquisa</label>
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="Festival ou cidade..." 
+                           class="w-full bg-[#121212] border border-zinc-700 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#1DB954] transition-colors">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-zinc-500 text-sm"></i>
+                </div>
+            </div>
+
+            <hr class="border-zinc-800">
+
+            <!-- NOVO: Filtro por Datas / Fins de Semana -->
+            <div class="bg-[#121212] p-4 rounded-xl border border-zinc-800 shadow-inner">
+                <label class="text-xs font-bold uppercase text-white tracking-wider flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-calendar-days text-[#1DB954]"></i> Período do Evento
+                </label>
+                <p class="text-[11px] text-[#B3B3B3] mb-3 leading-relaxed">Seleciona as datas para encontrares festivais que ocorram nesse fim de semana ou intervalo.</p>
+                
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <label class="text-[10px] text-zinc-500 uppercase block mb-1">A partir de:</label>
+                        <input type="date" id="date-start" class="w-full bg-[#1E1E1E] border border-zinc-700 rounded p-2 text-xs text-white focus:outline-none focus:border-[#1DB954]" style="color-scheme: dark;">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-zinc-500 uppercase block mb-1">Até:</label>
+                        <input type="date" id="date-end" class="w-full bg-[#1E1E1E] border border-zinc-700 rounded p-2 text-xs text-white focus:outline-none focus:border-[#1DB954]" style="color-scheme: dark;">
+                    </div>
+                    <button id="clear-dates" class="mt-1 text-[11px] text-[#1DB954] hover:text-white transition-colors text-right">
+                        Limpar datas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros Estruturados -->
+            <div class="flex flex-col gap-4">
+                <div>
+                    <label class="text-xs font-semibold uppercase text-[#B3B3B3] tracking-widest block mb-2">Distrito</label>
+                    <select id="filter-distrito" class="w-full bg-[#121212] border border-zinc-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-[#1DB954]">
+                        <option value="">Todos os Distritos</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="border-zinc-800">
+
+            <!-- Geofence Salvaterra -->
+            <div class="bg-[#121212] p-4 rounded-xl border border-zinc-800 shadow-inner">
+                <div class="flex items-center justify-between mb-3">
+                    <label class="text-xs font-bold uppercase text-white tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-location-crosshairs text-[#1DB954]"></i> Proximidade
+                    </label>
+                    <input type="checkbox" id="geo-toggle" class="w-4 h-4 accent-[#1DB954] cursor-pointer">
+                </div>
+                <p class="text-[11px] text-[#B3B3B3] mb-3 leading-relaxed">Raio a partir de <strong>Salvaterra de Magos</strong>.</p>
+                <div class="opacity-40 pointer-events-none transition-opacity" id="geo-slider-wrapper">
+                    <input type="range" id="geo-slider" min="5" max="300" value="100" class="w-full h-1 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-[#1DB954]">
+                    <div class="flex justify-between items-center mt-2 text-xs text-[#B3B3B3]">
+                        <span>Até:</span>
+                        <span class="font-bold text-white" id="geo-val">100 km</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAP PANEL -->
+        <main class="flex-1 h-full relative" id="map"></main>
+
+        <!-- SIDEBAR DIREITA: Lista de Festivais -->
+        <aside class="w-96 bg-[#121212] border-l border-[#282828] flex flex-col h-full overflow-hidden">
+            <div class="p-4 bg-[#1E1E1E] border-b border-[#282828] flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-widest text-[#B3B3B3]">Próximos Festivais</span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3" id="festival-list-container">
+                <!-- Injetado dinamicamente -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Data Engine JavaScript -->
+    <script>
+        const SALVATERRA_COORDS = [38.9658, -8.7032];
+
+        // Base de dados processada a partir do Excel 'festivais_2.xlsx'
+        const databaseFestivais = [
+            { id: 1, nome: "Mêda+", cidade: "Mêda", distrito: "Guarda", coords: [40.9634, -7.2625], dataInicio: "2026-07-22", dataFim: "2026-07-25", instagram: "medamais" },
+            { id: 2, nome: "Romaria Cultural", cidade: "Gouveia", distrito: "Guarda", coords: [40.4932, -7.5921], dataInicio: "2026-07-24", dataFim: "2026-07-26", instagram: "go_romaria_cultural" },
+            { id: 3, nome: "Rock in Barco", cidade: "Praia Fluvial de Barco", distrito: "Braga", coords: [41.4920, -8.2410], dataInicio: "2026-07-11", dataFim: "2026-07-11", instagram: "festivalbarco" },
+            { id: 4, nome: "Rock no Rio Febras", cidade: "S. Salvador de Briteiros", distrito: "Braga", coords: [41.5115, -8.3243], dataInicio: "2026-07-24", dataFim: "2026-07-25", instagram: "rock_riofebras" },
+            { id: 5, nome: "L'Agosto", cidade: "Guimarães", distrito: "Braga", coords: [41.4376, -8.2965], dataInicio: "2026-07-30", dataFim: "2026-08-01", instagram: "festival_lagosto" },
+            { id: 6, nome: "Mucho Flow", cidade: "Guimarães", distrito: "Braga", coords: [41.4440, -8.2960], dataInicio: "2026-10-29", dataFim: "2026-10-31", instagram: "muchoflowfestival" },
+            { id: 7, nome: "Lisb-On", cidade: "Lisboa", distrito: "Lisboa", coords: [38.7290, -9.1540], dataInicio: "2026-07-03", dataFim: "2026-07-04", instagram: "lisbon_jardimsonoro" },
+            { id: 8, nome: "Festival Aqui Ao Lado", cidade: "Massamá", distrito: "Lisboa", coords: [38.7566, -9.2730], dataInicio: "2026-07-03", dataFim: "2026-07-05", instagram: "festivalaquiaolado" },
+            { id: 9, nome: "Kalorama", cidade: "Parque da Bela Vista", distrito: "Lisboa", coords: [38.7470, -9.1240], dataInicio: "2026-08-28", dataFim: "2026-08-30", instagram: "meokalorama" },
+            { id: 10, nome: "Paredes de Coura", cidade: "Paredes de Coura", distrito: "Viana do Castelo", coords: [41.9110, -8.5645], dataInicio: "2026-08-12", dataFim: "2026-08-15", instagram: "vodafoneparedesdecoura" },
+            { id: 11, nome: "Neopop", cidade: "Viana do Castelo", distrito: "Viana do Castelo", coords: [41.6890, -8.8370], dataInicio: "2026-08-06", dataFim: "2026-08-08", instagram: "neopopfestival" },
+            { id: 12, nome: "Bonds", cidade: "Porto", distrito: "Porto", coords: [41.1500, -8.6200], dataInicio: "2026-09-19", dataFim: "2026-09-19", instagram: "bonds_festival" },
+            { id: 13, nome: "Indie Music Fest", cidade: "Baltar", distrito: "Porto", coords: [41.1945, -8.3764], dataInicio: "2026-09-03", dataFim: "2026-09-05", instagram: "indiemusicfest" },
+            { id: 14, nome: "Bajonca Rock Fest", cidade: "S. Pedro do Sul", distrito: "Viseu", coords: [40.7600, -8.0600], dataInicio: "2026-07-10", dataFim: "2026-07-11", instagram: "bajoncarockfest" },
+            { id: 15, nome: "FMM Sines", cidade: "Sines", distrito: "Setúbal", coords: [37.9561, -8.8712], dataInicio: "2026-07-17", dataFim: "2026-07-25", instagram: "fmm_sines" },
+            { id: 16, nome: "Cooperativa Fest", cidade: "Montijo", distrito: "Setúbal", coords: [38.7067, -8.9739], dataInicio: "2026-07-17", dataFim: "2026-07-18", instagram: "cooperativafest" },
+            { id: 17, nome: "Bons Sons", cidade: "Cem Soldos", distrito: "Santarém", coords: [39.5878, -8.4552], dataInicio: "2026-08-06", dataFim: "2026-08-09", instagram: "festival_bonssons" },
+            { id: 18, nome: "Vinho, Folar e Rock", cidade: "Valpaços", distrito: "Vila Real", coords: [41.6067, -7.3134], dataInicio: "2026-07-03", dataFim: "2026-07-04", instagram: "vinho_folar_e_rocknroll" },
+            { id: 19, nome: "Tom de Festa", cidade: "Tondela", distrito: "Viseu", coords: [40.5160, -8.0810], dataInicio: "2026-07-07", dataFim: "2026-07-11", instagram: "acert_tondela" },
+            { id: 20, nome: "Zigurfest", cidade: "Lamego", distrito: "Viseu", coords: [41.0958, -7.8064], dataInicio: "2026-07-25", dataFim: "2026-07-27", instagram: "zigurfest" },
+            { id: 21, nome: "Ocupar a Velga", cidade: "Valezim", distrito: "Guarda", coords: [40.3541, -7.6385], dataInicio: "2026-08-03", dataFim: "2026-08-08", instagram: "ocuparavelga" },
+            { id: 22, nome: "EntreTons", cidade: "Porto", distrito: "Porto", coords: [41.1442, -8.6062], dataInicio: "2026-07-17", dataFim: "2026-07-17", instagram: "entretonsfest" },
+            { id: 23, nome: "Filho Único", cidade: "Lisboa", distrito: "Lisboa", coords: [38.7100, -9.1450], dataInicio: "2026-06-18", dataFim: "2026-06-28", instagram: "filhounicolisboa" },
+            { id: 24, nome: "entretanto", cidade: "Alcanena", distrito: "Santarém", coords: [39.4600, -8.6800], dataInicio: "2026-07-03", dataFim: "2026-07-05", instagram: "festival.entretanto" },
+            { id: 25, nome: "Vapor", cidade: "Entroncamento", distrito: "Santarém", coords: [39.4647, -8.4735], dataInicio: "2026-09-12", dataFim: "2026-09-14", instagram: "festivalvapor" },
+            { id: 26, nome: "Sons no Parque", cidade: "Alijó", distrito: "Vila Real", coords: [41.2760, -7.4740], dataInicio: "2026-07-17", dataFim: "2026-07-18", instagram: "sonsnoparque" },
+            { id: 27, nome: "Seixal Terno", cidade: "Seixal", distrito: "Setúbal", coords: [38.6400, -9.1000], dataInicio: "2026-07-04", dataFim: "2026-07-04", instagram: "seixal_terno" },
+            { id: 28, nome: "Yard", cidade: "Quinta do Anjo", distrito: "Setúbal", coords: [38.5660, -8.9300], dataInicio: "2026-07-25", dataFim: "2026-07-25", instagram: "yard.pt" },
+            { id: 29, nome: "Frequência Abissal", cidade: "Castelo Branco", distrito: "Castelo Branco", coords: [39.8200, -7.4900], dataInicio: "2026-06-26", dataFim: "2026-06-26", instagram: "frequencia.abissal" },
+            { id: 30, nome: "Nascentes Fontes", cidade: "Aldeia das Fontes", distrito: "Leiria", coords: [39.8250, -8.7600], dataInicio: "2026-07-01", dataFim: "2026-07-05", instagram: "nascentes_fontes" },
+            { id: 31, nome: "Contrasta", cidade: "Valença", distrito: "Viana do Castelo", coords: [42.0300, -8.6400], dataInicio: "2026-07-10", dataFim: "2026-07-11", instagram: "festivalcontrasta" },
+            { id: 32, nome: "Vinculum", cidade: "Mondim de Basto", distrito: "Vila Real", coords: [41.4100, -7.9500], dataInicio: "2026-07-17", dataFim: "2026-07-19", instagram: "vinculum.pt" },
+            { id: 33, nome: "Barrelas Summer Fest", cidade: "Vila Nova de Paiva", distrito: "Viseu", coords: [40.8300, -7.7300], dataInicio: "2026-07-24", dataFim: "2026-07-25", instagram: "barrelassummerfest" }
+        ];
+
+        let map, markerClusterGroup;
+        let markersMap = {};
+
+        function initApp() {
+            map = L.map('map', { center: [39.5, -8.2], zoom: 7, zoomControl: false });
+            L.control.zoom({ position: 'bottomleft' }).addTo(map);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO', subdomains: 'abcd', maxZoom: 20
+            }).addTo(map);
+
+            markerClusterGroup = L.markerClusterGroup({
+                showCoverageOnHover: false,
+                iconCreateFunction: function(cluster) {
+                    return L.divIcon({
+                        html: `<span>${cluster.getChildCount()}</span>`,
+                        className: 'custom-cluster', iconSize: L.point(40, 40)
+                    });
+                }
+            });
+            map.addLayer(markerClusterGroup);
+
+            populateDistritosFilter();
+            
+            // Listeners
+            document.getElementById('search-input').addEventListener('input', updateInterface);
+            document.getElementById('filter-distrito').addEventListener('change', updateInterface);
+            
+            // Date Listeners
+            document.getElementById('date-start').addEventListener('change', updateInterface);
+            document.getElementById('date-end').addEventListener('change', updateInterface);
+            document.getElementById('clear-dates').addEventListener('click', () => {
+                document.getElementById('date-start').value = '';
+                document.getElementById('date-end').value = '';
+                updateInterface();
+            });
+
+            // Geo Listeners
+            document.getElementById('geo-toggle').addEventListener('change', function() {
+                const wrapper = document.getElementById('geo-slider-wrapper');
+                if (this.checked) wrapper.classList.remove('opacity-40', 'pointer-events-none');
+                else wrapper.classList.add('opacity-40', 'pointer-events-none');
+                updateInterface();
+            });
+            document.getElementById('geo-slider').addEventListener('input', function() {
+                document.getElementById('geo-val').innerText = `${this.value} km`;
+                updateInterface();
+            });
+
+            // Ordenar base de dados por data (mais recentes primeiro)
+            databaseFestivais.sort((a, b) => new Date(a.dataInicio) - new Date(b.dataInicio));
+
+            updateInterface();
+        }
+
+        function populateDistritosFilter() {
+            const distritoSelect = document.getElementById('filter-distrito');
+            const distritosunicos = [...new Set(databaseFestivais.map(f => f.distrito))].sort();
+            distritosunicos.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d; opt.innerText = d;
+                distritoSelect.appendChild(opt);
+            });
+        }
+
+        function calculateHaversine(coords1, coords2) {
+            const [lat1, lon1] = coords1; const [lat2, lon2] = coords2;
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // Nova função para formatar o intervalo de datas inteligentemente
+        function formatarDataDupla(inicio, fim) {
+            const opcDiaMes = { day: 'numeric', month: 'short' };
+            const ano = new Date(fim).getFullYear();
+            const strInicio = new Date(inicio).toLocaleDateString('pt-PT', opcDiaMes);
+            const strFim = new Date(fim).toLocaleDateString('pt-PT', opcDiaMes);
+            
+            if (inicio === fim) return `${strInicio}, ${ano}`;
+            return `${strInicio} a ${strFim}, ${ano}`;
+        }
+
+        function updateInterface() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const selectedDistrito = document.getElementById('filter-distrito').value;
+            
+            const filterStartStr = document.getElementById('date-start').value;
+            const filterEndStr = document.getElementById('date-end').value;
+            const filterStart = filterStartStr ? new Date(filterStartStr) : null;
+            const filterEnd = filterEndStr ? new Date(filterEndStr) : null;
+
+            const geoActive = document.getElementById('geo-toggle').checked;
+            const geoRaio = parseFloat(document.getElementById('geo-slider').value);
+
+            const filtered = databaseFestivais.filter(fest => {
+                const matchesSearch = fest.nome.toLowerCase().includes(searchTerm) || fest.cidade.toLowerCase().includes(searchTerm);
+                const matchesDistrito = selectedDistrito === "" || fest.distrito === selectedDistrito;
+                
+                // Lógica de interceção de datas para o novo Filtro de Fim de Semana/Período
+                let matchesDate = true;
+                const festStart = new Date(fest.dataInicio);
+                const festEnd = new Date(fest.dataFim);
+                
+                if (filterStart && filterEnd) {
+                    matchesDate = (festEnd >= filterStart && festStart <= filterEnd);
+                } else if (filterStart) {
+                    matchesDate = (festEnd >= filterStart);
+                } else if (filterEnd) {
+                    matchesDate = (festStart <= filterEnd);
+                }
+
+                let matchesGeo = true;
+                if (geoActive) {
+                    matchesGeo = calculateHaversine(SALVATERRA_COORDS, fest.coords) <= geoRaio;
+                }
+
+                return matchesSearch && matchesDistrito && matchesDate && matchesGeo;
+            });
+
+            document.getElementById('counter-total').innerText = filtered.length;
+            renderPinsOnMap(filtered);
+            renderListCards(filtered);
+        }
+
+        function renderPinsOnMap(data) {
+            markerClusterGroup.clearLayers();
+            markersMap = {};
+
+            const customIcon = L.divIcon({
+                html: `<div class="w-4 h-4 bg-[#1DB954] rounded-full border-2 border-white shadow-[0_0_8px_#1DB954] transform -translate-x-1/2 -translate-y-1/2 hover:scale-125 transition-transform"></div>`,
+                className: '', iconSize: [16, 16]
+            });
+
+            data.forEach(fest => {
+                const marker = L.marker(fest.coords, { icon: customIcon });
+                
+                // Estrutura do Cartaz Futuro Adicionada (.poster-container escondido por agora)
+                let popupHtml = `
+                    <div class="p-2 min-w-[240px]">
+                        <div id="poster-${fest.id}" class="poster-container hidden w-full h-32 bg-zinc-800 rounded-lg mb-3 bg-cover bg-center shadow-inner border border-zinc-700"></div>
+                        <h3 class="text-base font-bold text-white mb-1 flex items-center justify-between">${fest.nome}</h3>
+                        <p class="text-xs text-[#1DB954] font-semibold mb-3"><i class="fa-solid fa-location-dot"></i> ${fest.cidade}, ${fest.distrito}</p>
+                        
+                        <div class="space-y-1 text-xs text-zinc-300 mb-4 bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/50">
+                            <div><span class="text-zinc-500">📅 Datas:</span> <span class="font-medium text-white">${formatarDataDupla(fest.dataInicio, fest.dataFim)}</span></div>
+                        </div>
+                        
+                        <div class="flex flex-col gap-2">
+                `;
+
+                if (fest.instagram) {
+                    // Instagram links diretamente da base de dados (suporta o formato original ou só o arroba)
+                    const igLink = fest.instagram.startsWith('http') ? fest.instagram : `https://instagram.com/${fest.instagram.replace('@', '')}`;
+                    popupHtml += `
+                        <a href="${igLink}" target="_blank" 
+                           class="w-full text-center bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
+                           <i class="fa-brands fa-instagram"></i> Instagram Oficial
+                        </a>
+                    `;
+                }
+
+                popupHtml += `
+                            <a href="https://www.google.com/maps/search/?api=1&query=${fest.coords[0]},${fest.coords[1]}" target="_blank" 
+                               class="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
+                               <i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps
+                            </a>
+                        </div></div>
+                `;
+                
+                marker.bindPopup(popupHtml);
+                marker.on('click', () => highlightCardInList(fest.id));
+
+                markerClusterGroup.addLayer(marker);
+                markersMap[fest.id] = marker;
+            });
+        }
+
+        function renderListCards(data) {
+            const container = document.getElementById('festival-list-container');
+            container.innerHTML = "";
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-zinc-500 text-sm">
+                        <i class="fa-solid fa-calendar-xmark text-2xl mb-2 block"></i>
+                        Sem festivais nas datas selecionadas.
+                    </div>
+                `;
+                return;
+            }
+
+            data.forEach(fest => {
+                const card = document.createElement('div');
+                card.id = `card-${fest.id}`;
+                card.className = "festival-card bg-[#1E1E1E] border border-zinc-800 p-4 rounded-xl cursor-pointer hover:bg-[#252525] hover:border-zinc-700 relative group flex flex-col justify-between";
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-start justify-between gap-2 mb-1">
+                            <h4 class="font-bold text-white group-hover:text-[#1DB954] transition-colors text-sm">${fest.nome}</h4>
+                            <span class="text-[10px] font-semibold text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full shrink-0">${fest.distrito}</span>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 mb-2 flex items-center gap-1">
+                            <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i> ${fest.cidade}
+                        </p>
+                    </div>
+                    <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-[#B3B3B3]">
+                        <span class="flex items-center gap-1 font-medium text-white/80"><i class="fa-regular fa-calendar text-[#1DB954]"></i> ${formatarDataDupla(fest.dataInicio, fest.dataFim)}</span>
+                        <i class="fa-solid fa-chevron-right text-zinc-600 group-hover:text-[#1DB954] transition-colors transform group-hover:translate-x-1"></i>
+                    </div>
+                `;
+
+                card.addEventListener('click', () => focusOnFestivalMarker(fest.id, fest.coords));
+                container.appendChild(card);
+            });
+        }
+
+        function focusOnFestivalMarker(id, coords) {
+            document.querySelectorAll('.festival-card').forEach(c => c.classList.remove('active-card'));
+            document.getElementById(`card-${id}`).classList.add('active-card');
+            
+            map.flyTo(coords, 14, { animate: true, duration: 1.2 });
+            setTimeout(() => {
+                const marker = markersMap[id];
+                if (marker) {
+                    markerClusterGroup.zoomToShowLayer(marker, () => marker.openPopup());
+                }
+            }, 600);
+        }
+
+        function highlightCardInList(id) {
+            document.querySelectorAll('.festival-card').forEach(c => c.classList.remove('active-card'));
+            const targetCard = document.getElementById(`card-${id}`);
+            if (targetCard) {
+                targetCard.classList.add('active-card');
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
