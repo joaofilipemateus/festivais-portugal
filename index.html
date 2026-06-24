@@ -361,7 +361,13 @@
                         
                         <div class="flex flex-col gap-2">
                 `;
-
+popupHtml += `
+${fest.artistas ? `
+<div class="text-xs text-zinc-300 bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/50 mb-2">
+    🎤 ${fest.artistas}
+</div>
+` : ''}
+`;
                 if (fest.instagram) {
                     // Instagram links diretamente da base de dados (suporta o formato original ou só o arroba)
                     const igLink = fest.instagram.startsWith('http') ? fest.instagram : `https://instagram.com/${fest.instagram.replace('@', '')}`;
