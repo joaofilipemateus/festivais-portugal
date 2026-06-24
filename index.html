@@ -411,11 +411,12 @@
                 card.innerHTML = `
                     <div>
                         <div class="flex items-start justify-between gap-2 mb-1">
-                            <h4 class="font-bold text-white group-hover:text-[#1DB954] transition-colors text-sm">${fest.nome}</h4>
+                            <h4 class="font-bold text-white group-hover:text-[#1DB954] transition-colors text-lg mb-1">${fest.nome}</h4>
                             <span class="text-[10px] font-semibold text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full shrink-0">${fest.distrito}</span>
                         </div>
                         <p class="text-[11px] text-zinc-400 mb-2 flex items-center gap-1">
-                            <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i> ${fest.cidade}
+                            <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i>
+<span class="font-medium">${fest.cidade}</span>
                         </p>
                     </div>
                     <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-[#B3B3B3]">
