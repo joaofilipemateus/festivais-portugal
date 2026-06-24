@@ -182,7 +182,7 @@
             { id: 6, nome: "Mucho Flow", cidade: "Guimarães", distrito: "Braga", coords: [41.4440, -8.2960], dataInicio: "2026-10-29", dataFim: "2026-10-31", instagram: "muchoflowfestival" },
             { id: 7, nome: "Lisb-On", cidade: "Lisboa", distrito: "Lisboa", coords: [38.7290, -9.1540], dataInicio: "2026-07-03", dataFim: "2026-07-04", instagram: "lisbon_jardimsonoro" },
             { id: 8, nome: "Festival Aqui Ao Lado", cidade: "Massamá", distrito: "Lisboa", coords: [38.7566, -9.2730], dataInicio: "2026-07-03", dataFim: "2026-07-05", instagram: "festivalaquiaolado" },
-            { id: 9, nome: "Kalorama", cidade: "Parque da Bela Vista", distrito: "Lisboa", coords: [38.7470, -9.1240], dataInicio: "2026-08-28", dataFim: "2026-08-30", instagram: "meokalorama" },
+            { id: 9, nome: "Kalorama", cidade: "Parque da Bela Vista", distrito: "Lisboa", coords: [38.7470, -9.1240], dataInicio: "2026-08-28", dataFim: "2026-08-30", instagram: "meokalorama", artistas: "Robbie Williams, Pet Shop Boys, Jorja Smith" },
             { id: 10, nome: "Paredes de Coura", cidade: "Paredes de Coura", distrito: "Viana do Castelo", coords: [41.9110, -8.5645], dataInicio: "2026-08-12", dataFim: "2026-08-15", instagram: "vodafoneparedesdecoura" },
             { id: 11, nome: "Neopop", cidade: "Viana do Castelo", distrito: "Viana do Castelo", coords: [41.6890, -8.8370], dataInicio: "2026-08-06", dataFim: "2026-08-08", instagram: "neopopfestival" },
             { id: 12, nome: "Bonds", cidade: "Porto", distrito: "Porto", coords: [41.1500, -8.6200], dataInicio: "2026-09-19", dataFim: "2026-09-19", instagram: "bonds_festival" },
@@ -418,6 +418,11 @@
                             <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i>
 <span class="font-medium">${fest.cidade}</span>
                         </p>
+                    ${fest.artistas ? `
+<p class="text-[11px] text-zinc-500 mb-2 truncate">
+    🎤 ${fest.artistas}
+</p>
+` : ''}
                     </div>
                     <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-[#B3B3B3]">
                         <span class="flex items-center gap-1 font-medium text-white/80"><i class="fa-regular fa-calendar text-[#1DB954]"></i> ${formatarDataDupla(fest.dataInicio, fest.dataFim)}</span>
