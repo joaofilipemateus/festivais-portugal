@@ -1797,8 +1797,37 @@ function abrirFestivalSheet(fest) {
     document.getElementById('sheet-dates').textContent =
         formatarDataDupla(fest.dataInicio, fest.dataFim);
 
-    document.getElementById('sheet-artists').innerHTML =
-        fest.cartaz ? fest.cartaz.join('<br>') : '';
+    const artistas = fest.cartaz || [];
+
+const artistasMostrar = artistas.slice(0, 4);
+
+let htmlArtistas = `
+<div class="text-[#1DB954] text-sm font-bold uppercase mb-3">
+Artistas Principais
+</div>
+
+<div class="flex flex-wrap gap-2">
+`;
+
+artistasMostrar.forEach(nome => {
+    htmlArtistas += `
+        <span class="bg-[#1E1E1E] border border-zinc-700 px-3 py-1 rounded-full text-sm">
+            ${nome}
+        </span>
+    `;
+});
+
+if (artistas.length > 4) {
+    htmlArtistas += `
+        <span class="bg-[#1E1E1E] border border-zinc-700 px-3 py-1 rounded-full text-sm">
+            +${artistas.length - 4}
+        </span>
+    `;
+}
+
+htmlArtistas += '</div>';
+
+document.getElementById('sheet-artists').innerHTML = htmlArtistas;
 
     document.getElementById('sheet-instagram').href =
         fest.instagram || '#';
