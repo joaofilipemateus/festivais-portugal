@@ -1809,14 +1809,27 @@
 
         window.onload = () => {
     initApp();
+function ativarBotao(botaoAtivo) {
+    document.getElementById('btn-lista').classList.remove('text-[#1DB954]');
+    document.getElementById('btn-mapa').classList.remove('text-[#1DB954]');
+    document.getElementById('btn-filtros').classList.remove('text-[#1DB954]');
 
+    document.getElementById('btn-lista').classList.add('text-zinc-400');
+    document.getElementById('btn-mapa').classList.add('text-zinc-400');
+    document.getElementById('btn-filtros').classList.add('text-zinc-400');
+
+    botaoAtivo.classList.remove('text-zinc-400');
+    botaoAtivo.classList.add('text-[#1DB954]');
+}
     document.getElementById('btn-lista').addEventListener('click', () => {
+        ativarBotao(document.getElementById('btn-lista'));
     document.getElementById('painel-filtros').style.display = 'none';
     document.getElementById('painel-mapa').style.display = 'none';
     document.getElementById('painel-lista').style.display = 'flex';
 });
 
 document.getElementById('btn-mapa').addEventListener('click', () => {
+    ativarBotao(document.getElementById('btn-mapa'));
     document.getElementById('painel-filtros').style.display = 'none';
     document.getElementById('painel-lista').style.display = 'none';
     document.getElementById('painel-mapa').style.display = 'block';
@@ -1827,6 +1840,7 @@ document.getElementById('btn-mapa').addEventListener('click', () => {
 });
 
 document.getElementById('btn-filtros').addEventListener('click', () => {
+    ativarBotao(document.getElementById('btn-filtros'));
     document.getElementById('painel-lista').style.display = 'none';
     document.getElementById('painel-mapa').style.display = 'none';
     document.getElementById('painel-filtros').style.display = 'flex';
