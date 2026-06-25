@@ -1780,11 +1780,44 @@
                     </div>
                 `;
 
-                card.addEventListener('click', () => focusOnFestivalMarker(fest.id, fest.coords));
+                card.addEventListener('click', () => abrirFestivalSheet(fest));
                 container.appendChild(card);
             });
         }
+function abrirFestivalSheet(fest) {
 
+    document.getElementById('sheet-image').src =
+        fest.imagem || 'https://placehold.co/800x400/121212/FFFFFF?text=Festival';
+
+    document.getElementById('sheet-title').textContent = fest.nome;
+
+    document.getElementById('sheet-location').textContent =
+        fest.cidade + ' • ' + fest.distrito;
+
+    document.getElementById('sheet-dates').textContent =
+        formatarDataDupla(fest.dataInicio, fest.dataFim);
+
+    document.getElementById('sheet-artists').innerHTML =
+        fest.cartaz ? fest.cartaz.join('<br>') : '';
+
+    document.getElementById('sheet-instagram').href =
+        fest.instagram || '#';
+
+    document.getElementById('festival-sheet').classList.remove('hidden');
+
+    document.getElementById('sheet-close').onclick = () => {
+        document.getElementById('festival-sheet').classList.add('hidden');
+    };
+
+    document.getElementById('sheet-map').onclick = () => {
+
+        document.getElementById('festival-sheet').classList.add('hidden');
+
+        document.getElementById('btn-mapa').click();
+
+        focusOnFestivalMarker(fest.id, fest.coords);
+    };
+}
         function focusOnFestivalMarker(id, coords) {
             document.querySelectorAll('.festival-card').forEach(c => c.classList.remove('active-card'));
             document.getElementById(`card-${id}`).classList.add('active-card');
@@ -1847,6 +1880,36 @@ document.getElementById('btn-filtros').addEventListener('click', () => {
 });
 };
     </script>
+    <div id="festival-sheet" class="hidden fixed inset-0 z-[99998] bg-black/70">
+    <div id="festival-sheet-content" class="absolute bottom-0 left-0 right-0 bg-[#121212] rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto">
+
+        <button id="sheet-close" class="absolute top-4 right-4 text-zinc-400 text-xl">
+            ✕
+        </button>
+
+        <img id="sheet-image" src="" class="w-full h-48 object-cover rounded-xl mb-4">
+
+        <h2 id="sheet-title" class="text-xl font-bold text-white mb-2"></h2>
+
+        <p id="sheet-location" class="text-zinc-400 mb-2"></p>
+
+        <p id="sheet-dates" class="text-[#1DB954] mb-4"></p>
+
+        <div id="sheet-artists" class="text-sm text-zinc-300 mb-6"></div>
+
+        <a id="sheet-instagram"
+           target="_blank"
+           class="block text-center bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl mb-3">
+            Instagram
+        </a>
+
+        <button id="sheet-map"
+                class="w-full bg-[#1DB954] text-black py-3 rounded-xl font-semibold">
+            Ver no mapa
+        </button>
+
+    </div>
+</div>
     <!-- Navegação Mobile -->
 <div class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#282828] flex justify-around items-center h-16 lg:hidden z-[9999]">
 
