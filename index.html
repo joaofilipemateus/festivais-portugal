@@ -155,7 +155,7 @@
     <!-- Main Content -->
 <div class="flex-1 flex flex-col lg:flex-row overflow-hidden w-full relative">        
         <!-- SIDEBAR ESQUERDA: Filtros -->
-<aside class="w-full lg:w-80 bg-[#1E1E1E] border-r border-[#282828] flex flex-col p-5 gap-6 overflow-y-auto">            <div>
+<aside id="painel-filtros" class="w-full lg:w-80 bg-[#1E1E1E] border-r border-[#282828] flex flex-col p-5 gap-6 overflow-y-auto">            <div>
                 <label class="text-xs font-semibold uppercase text-[#B3B3B3] tracking-widest block mb-2">Pesquisa</label>
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Festival ou cidade..." 
@@ -222,7 +222,7 @@
         <!-- MAP PANEL -->
 <main class="w-full h-[400px] lg:flex-1 lg:h-full relative" id="map"></main>
         <!-- SIDEBAR DIREITA: Lista de Festivais -->
-<aside class="w-full lg:w-96 bg-[#121212] border-l border-[#282828] flex flex-col h-full overflow-hidden">            <div class="p-4 bg-[#1E1E1E] border-b border-[#282828] flex items-center justify-between">
+<aside id="painel-lista" class="w-full lg:w-96 bg-[#121212] border-l border-[#282828] flex flex-col h-full overflow-hidden">            <div class="p-4 bg-[#1E1E1E] border-b border-[#282828] flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-widest text-[#B3B3B3]">Próximos Festivais</span>
             </div>
             
@@ -1810,17 +1810,17 @@
     <!-- Navegação Mobile -->
 <div class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#282828] flex justify-around items-center h-16 lg:hidden z-[9999]">
 
-    <button class="flex flex-col items-center gap-1 text-[#1DB954] text-xs">
+    <button id="btn-lista" class="flex flex-col items-center gap-1 text-[#1DB954] text-xs">
         <i class="fa-solid fa-list"></i>
         <span>Lista</span>
     </button>
 
-    <button class="flex flex-col items-center gap-1 text-zinc-400 text-xs">
+    <button id="btn-mapa" class="flex flex-col items-center gap-1 text-zinc-400 text-xs">
         <i class="fa-solid fa-map"></i>
         <span>Mapa</span>
     </button>
 
-    <button class="flex flex-col items-center gap-1 text-zinc-400 text-xs">
+    <button id="btn-filtros" class="flex flex-col items-center gap-1 text-zinc-400 text-xs">
         <i class="fa-solid fa-sliders"></i>
         <span>Filtros</span>
     </button>
