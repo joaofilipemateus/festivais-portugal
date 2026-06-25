@@ -1804,11 +1804,16 @@
                 targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
-document.getElementById('btn-lista').addEventListener('click', () => {
-    document.getElementById('painel-filtros').style.display = 'none';
-    document.getElementById('painel-lista').style.display = 'flex';
+
 });
-        window.onload = initApp;
+        window.onload = () => {
+    initApp();
+
+    document.getElementById('btn-lista').addEventListener('click', () => {
+        document.getElementById('painel-filtros').style.display = 'none';
+        document.getElementById('painel-lista').style.display = 'flex';
+    });
+};
     </script>
     <!-- Navegação Mobile -->
 <div class="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#282828] flex justify-around items-center h-16 lg:hidden z-[9999]">
