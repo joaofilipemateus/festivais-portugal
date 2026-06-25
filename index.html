@@ -1819,16 +1819,51 @@ artistasMostrar.forEach(nome => {
 
 if (artistas.length > 4) {
     htmlArtistas += `
-        <span class="bg-[#1E1E1E] border border-zinc-700 px-3 py-1 rounded-full text-sm">
-            +${artistas.length - 4}
-        </span>
+        <span
+    id="mais-artistas"
+    class="bg-[#1E1E1E] border border-zinc-700 px-3 py-1 rounded-full text-sm cursor-pointer text-[#1DB954]"
+>
+    +${artistas.length - 4}
+</span>
     `;
 }
 
 htmlArtistas += '</div>';
 
 document.getElementById('sheet-artists').innerHTML = htmlArtistas;
+if (artistas.length > 4) {
 
+    const btnMais = document.getElementById('mais-artistas');
+
+    if (btnMais) {
+
+        btnMais.addEventListener('click', () => {
+
+            let htmlCompleto = `
+            <div class="text-[#1DB954] text-sm font-bold uppercase mb-3">
+                Artistas Principais
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+            `;
+
+            artistas.forEach(nome => {
+                htmlCompleto += `
+                    <span class="bg-[#1E1E1E] border border-zinc-700 px-3 py-1 rounded-full text-sm">
+                        ${nome}
+                    </span>
+                `;
+            });
+
+            htmlCompleto += '</div>';
+
+            document.getElementById('sheet-artists').innerHTML = htmlCompleto;
+
+        });
+
+    }
+
+}
     document.getElementById('sheet-instagram').href =
         fest.instagram || '#';
 
