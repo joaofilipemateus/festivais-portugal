@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Festivais Portugal 🎵</title>
+    <title>Festivais de Portugal 2026 - Premium Dashboard</title>
     
     <!-- Google Fonts & Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -64,6 +64,74 @@
             background: rgba(29, 185, 84, 0.1) !important;
             box-shadow: 0 0 15px rgba(29, 185, 84, 0.1);
         }
+
+        /* Popup ampliado para acomodar logótipo, artistas e viagem */
+        .leaflet-popup-content { margin: 12px !important; width: 300px !important; }
+
+        .festival-logo {
+            width: 60px; height: 60px; min-width: 60px;
+            border-radius: 10px; object-fit: cover;
+            background: #282828; border: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        .festival-logo-placeholder {
+            width: 60px; height: 60px; min-width: 60px;
+            border-radius: 10px; background: #282828;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            color: #555; font-size: 20px; flex-shrink: 0;
+        }
+
+        .artist-tag-list {
+            max-height: 88px; overflow-y: auto;
+            display: flex; flex-wrap: wrap; gap: 4px;
+        }
+        .artist-tag {
+            background: rgba(29, 185, 84, 0.12);
+            border: 1px solid rgba(29, 185, 84, 0.35);
+            color: #d6f5e1;
+            font-size: 10px; line-height: 1.4;
+            padding: 2px 7px; border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .viagem-toggle {
+            width: 100%; text-align: left;
+            display: flex; align-items: center; justify-content: space-between;
+            background: #1E1E1E; border: 1px solid #333;
+            border-radius: 8px; padding: 7px 10px;
+            color: #fff; font-size: 12px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s ease;
+        }
+        .viagem-toggle:hover { background: #252525; }
+        .viagem-toggle .chevron { transition: transform 0.2s ease; }
+        .viagem-toggle.open .chevron { transform: rotate(180deg); }
+
+        .viagem-panel { display: none; margin-top: 8px; }
+        .viagem-panel.open { display: block; }
+
+        .viagem-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .viagem-table th {
+            text-align: left; color: #888; font-weight: 600;
+            padding: 4px 6px; border-bottom: 1px solid #333;
+            text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;
+        }
+        .viagem-table td { padding: 6px 6px; border-bottom: 1px solid #282828; color: #eee; }
+        .viagem-table tr:last-child td { border-bottom: none; }
+
+        .portagem-input {
+            width: 100%; background: #121212; border: 1px solid #333;
+            border-radius: 6px; padding: 5px 8px; font-size: 11px;
+            color: #fff; margin-top: 6px;
+        }
+        .portagem-input:focus { outline: none; border-color: #1DB954; }
+
+        .viagem-spinner {
+            display: inline-block; width: 12px; height: 12px;
+            border: 2px solid rgba(255,255,255,0.2); border-top-color: #1DB954;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col">
@@ -172,42 +240,1074 @@
     <script>
         const SALVATERRA_COORDS = [38.9658, -8.7032];
 
-        // Base de dados processada a partir do Excel 'festivais_2.xlsx'
+        // Base de dados processada a partir do Excel 'festivais.xlsx' (33 festivais)
+        // Imagens apontam para a pasta local /img (ver download_images.py)
         const databaseFestivais = [
-            { id: 1, nome: "Mêda+", cidade: "Mêda", distrito: "Guarda", coords: [40.9634, -7.2625], dataInicio: "2026-07-22", dataFim: "2026-07-25", instagram: "medamais" },
-            { id: 2, nome: "Romaria Cultural", cidade: "Gouveia", distrito: "Guarda", coords: [40.4932, -7.5921], dataInicio: "2026-07-24", dataFim: "2026-07-26", instagram: "go_romaria_cultural" },
-            { id: 3, nome: "Rock in Barco", cidade: "Praia Fluvial de Barco", distrito: "Braga", coords: [41.4920, -8.2410], dataInicio: "2026-07-11", dataFim: "2026-07-11", instagram: "festivalbarco" },
-            { id: 4, nome: "Rock no Rio Febras", cidade: "S. Salvador de Briteiros", distrito: "Braga", coords: [41.5115, -8.3243], dataInicio: "2026-07-24", dataFim: "2026-07-25", instagram: "rock_riofebras" },
-            { id: 5, nome: "L'Agosto", cidade: "Guimarães", distrito: "Braga", coords: [41.4376, -8.2965], dataInicio: "2026-07-30", dataFim: "2026-08-01", instagram: "festival_lagosto" },
-            { id: 6, nome: "Mucho Flow", cidade: "Guimarães", distrito: "Braga", coords: [41.4440, -8.2960], dataInicio: "2026-10-29", dataFim: "2026-10-31", instagram: "muchoflowfestival" },
-            { id: 7, nome: "Lisb-On", cidade: "Lisboa", distrito: "Lisboa", coords: [38.7290, -9.1540], dataInicio: "2026-07-03", dataFim: "2026-07-04", instagram: "lisbon_jardimsonoro" },
-            { id: 8, nome: "Festival Aqui Ao Lado", cidade: "Massamá", distrito: "Lisboa", coords: [38.7566, -9.2730], dataInicio: "2026-07-03", dataFim: "2026-07-05", instagram: "festivalaquiaolado" },
-            { id: 9, nome: "Kalorama", cidade: "Parque da Bela Vista", distrito: "Lisboa", coords: [38.7470, -9.1240], dataInicio: "2026-08-28", dataFim: "2026-08-30", instagram: "meokalorama", artistas: "Robbie Williams, Pet Shop Boys, Jorja Smith" },
-            { id: 10, nome: "Paredes de Coura", cidade: "Paredes de Coura", distrito: "Viana do Castelo", coords: [41.9110, -8.5645], dataInicio: "2026-08-12", dataFim: "2026-08-15", instagram: "vodafoneparedesdecoura" },
-            { id: 11, nome: "Neopop", cidade: "Viana do Castelo", distrito: "Viana do Castelo", coords: [41.6890, -8.8370], dataInicio: "2026-08-06", dataFim: "2026-08-08", instagram: "neopopfestival" },
-            { id: 12, nome: "Bonds", cidade: "Porto", distrito: "Porto", coords: [41.1500, -8.6200], dataInicio: "2026-09-19", dataFim: "2026-09-19", instagram: "bonds_festival" },
-            { id: 13, nome: "Indie Music Fest", cidade: "Baltar", distrito: "Porto", coords: [41.1945, -8.3764], dataInicio: "2026-09-03", dataFim: "2026-09-05", instagram: "indiemusicfest" },
-            { id: 14, nome: "Bajonca Rock Fest", cidade: "S. Pedro do Sul", distrito: "Viseu", coords: [40.7600, -8.0600], dataInicio: "2026-07-10", dataFim: "2026-07-11", instagram: "bajoncarockfest" },
-            { id: 15, nome: "FMM Sines", cidade: "Sines", distrito: "Setúbal", coords: [37.9561, -8.8712], dataInicio: "2026-07-17", dataFim: "2026-07-25", instagram: "fmm_sines" },
-            { id: 16, nome: "Cooperativa Fest", cidade: "Montijo", distrito: "Setúbal", coords: [38.7067, -8.9739], dataInicio: "2026-07-17", dataFim: "2026-07-18", instagram: "cooperativafest" },
-            { id: 17, nome: "Bons Sons", cidade: "Cem Soldos", distrito: "Santarém", coords: [39.5878, -8.4552], dataInicio: "2026-08-06", dataFim: "2026-08-09", instagram: "festival_bonssons" },
-            { id: 18, nome: "Vinho, Folar e Rock", cidade: "Valpaços", distrito: "Vila Real", coords: [41.6067, -7.3134], dataInicio: "2026-07-03", dataFim: "2026-07-04", instagram: "vinho_folar_e_rocknroll" },
-            { id: 19, nome: "Tom de Festa", cidade: "Tondela", distrito: "Viseu", coords: [40.5160, -8.0810], dataInicio: "2026-07-07", dataFim: "2026-07-11", instagram: "acert_tondela" },
-            { id: 20, nome: "Zigurfest", cidade: "Lamego", distrito: "Viseu", coords: [41.0958, -7.8064], dataInicio: "2026-07-25", dataFim: "2026-07-27", instagram: "zigurfest" },
-            { id: 21, nome: "Ocupar a Velga", cidade: "Valezim", distrito: "Guarda", coords: [40.3541, -7.6385], dataInicio: "2026-08-03", dataFim: "2026-08-08", instagram: "ocuparavelga" },
-            { id: 22, nome: "EntreTons", cidade: "Porto", distrito: "Porto", coords: [41.1442, -8.6062], dataInicio: "2026-07-17", dataFim: "2026-07-17", instagram: "entretonsfest" },
-            { id: 23, nome: "Filho Único", cidade: "Lisboa", distrito: "Lisboa", coords: [38.7100, -9.1450], dataInicio: "2026-06-18", dataFim: "2026-06-28", instagram: "filhounicolisboa" },
-            { id: 24, nome: "entretanto", cidade: "Alcanena", distrito: "Santarém", coords: [39.4600, -8.6800], dataInicio: "2026-07-03", dataFim: "2026-07-05", instagram: "festival.entretanto" },
-            { id: 25, nome: "Vapor", cidade: "Entroncamento", distrito: "Santarém", coords: [39.4647, -8.4735], dataInicio: "2026-09-12", dataFim: "2026-09-14", instagram: "festivalvapor" },
-            { id: 26, nome: "Sons no Parque", cidade: "Alijó", distrito: "Vila Real", coords: [41.2760, -7.4740], dataInicio: "2026-07-17", dataFim: "2026-07-18", instagram: "sonsnoparque" },
-            { id: 27, nome: "Seixal Terno", cidade: "Seixal", distrito: "Setúbal", coords: [38.6400, -9.1000], dataInicio: "2026-07-04", dataFim: "2026-07-04", instagram: "seixal_terno" },
-            { id: 28, nome: "Yard", cidade: "Quinta do Anjo", distrito: "Setúbal", coords: [38.5660, -8.9300], dataInicio: "2026-07-25", dataFim: "2026-07-25", instagram: "yard.pt" },
-            { id: 29, nome: "Frequência Abissal", cidade: "Castelo Branco", distrito: "Castelo Branco", coords: [39.8200, -7.4900], dataInicio: "2026-06-26", dataFim: "2026-06-26", instagram: "frequencia.abissal" },
-            { id: 30, nome: "Nascentes Fontes", cidade: "Aldeia das Fontes", distrito: "Leiria", coords: [39.8250, -8.7600], dataInicio: "2026-07-01", dataFim: "2026-07-05", instagram: "nascentes_fontes" },
-            { id: 31, nome: "Contrasta", cidade: "Valença", distrito: "Viana do Castelo", coords: [42.0300, -8.6400], dataInicio: "2026-07-10", dataFim: "2026-07-11", instagram: "festivalcontrasta" },
-            { id: 32, nome: "Vinculum", cidade: "Mondim de Basto", distrito: "Vila Real", coords: [41.4100, -7.9500], dataInicio: "2026-07-17", dataFim: "2026-07-19", instagram: "vinculum.pt" },
-            { id: 33, nome: "Barrelas Summer Fest", cidade: "Vila Nova de Paiva", distrito: "Viseu", coords: [40.8300, -7.7300], dataInicio: "2026-07-24", dataFim: "2026-07-25", instagram: "barrelassummerfest" }
-        ];
+            {
+                        "id": 1,
+                        "nome": "Mêda+",
+                        "cidade": "Mêda",
+                        "distrito": "Guarda",
+                        "coords": [
+                                    40.9634,
+                                    -7.2625
+                        ],
+                        "dataInicio": "2026-07-22",
+                        "dataFim": "2026-07-25",
+                        "instagram": "https://www.instagram.com/medamais",
+                        "cartaz": [
+                                    "Novos Romanticos",
+                                    "DJ Tam",
+                                    "Esquerda",
+                                    "Clarisse e os Desviados",
+                                    "Bonança",
+                                    "Félix Gambino",
+                                    "Mães Solteiras",
+                                    "M.Dusa",
+                                    "Unsafe Space Garden",
+                                    "Três Tristes Tigres",
+                                    "Deambula",
+                                    "Themandus",
+                                    "Da Chick",
+                                    "Monch Monch",
+                                    "Senza",
+                                    "Expresso Transatlântico",
+                                    "Ana de Llor",
+                                    "Marquise",
+                                    "Duques do Precariado",
+                                    "Magupi",
+                                    "Traz os Monstros",
+                                    "Mr. Gallini",
+                                    "Malaboos",
+                                    "Sónia Trópicos",
+                                    "Motherflutters",
+                                    "BBB Hairdryer"
+                        ],
+                        "imagem": "img/festival-01-meda.jpg"
+            },
+            {
+                        "id": 2,
+                        "nome": "Romaria Cultural",
+                        "cidade": "Gouveia",
+                        "distrito": "Guarda",
+                        "coords": [
+                                    40.4932,
+                                    -7.5921
+                        ],
+                        "dataInicio": "2026-07-24",
+                        "dataFim": "2026-07-26",
+                        "instagram": "https://www.instagram.com/go_romaria_cultural",
+                        "cartaz": [
+                                    "Maquina",
+                                    "Birds Are Indie",
+                                    "André Júlio Turquesa",
+                                    "GANA",
+                                    "Esquerda",
+                                    "Ideograph",
+                                    "A Boy Named Sue",
+                                    "Tsuru",
+                                    "Rui Monteiro",
+                                    "Pêra-Roxa",
+                                    "Johnny Gil",
+                                    "Barrosa",
+                                    "Ogata Tetsuo",
+                                    "The G.U.M."
+                        ],
+                        "imagem": "img/festival-02-romaria-cultural.jpg"
+            },
+            {
+                        "id": 3,
+                        "nome": "Rock in Barco",
+                        "cidade": "Praia Fluvial de Barco, Guimarães",
+                        "distrito": "Braga",
+                        "coords": [
+                                    41.492,
+                                    -8.241
+                        ],
+                        "dataInicio": "2026-07-11",
+                        "dataFim": "2026-07-11",
+                        "instagram": "https://www.instagram.com/festivalbarco",
+                        "cartaz": [
+                                    "Acid Tongue (USA)",
+                                    "Serena Kaos",
+                                    "Zamora",
+                                    "Must Be Blue",
+                                    "Madmess",
+                                    "Flor Girino",
+                                    "Time for T",
+                                    "Cobra ao Pescoço"
+                        ],
+                        "imagem": "img/festival-03-rock-in-barco.jpg"
+            },
+            {
+                        "id": 4,
+                        "nome": "Rock no Rio Febras",
+                        "cidade": "São Salvador de Briteiros, Guimarães",
+                        "distrito": "Braga",
+                        "coords": [
+                                    41.5115,
+                                    -8.3243
+                        ],
+                        "dataInicio": "2026-07-24",
+                        "dataFim": "2026-07-25",
+                        "instagram": "https://www.instagram.com/rock_riofebras",
+                        "cartaz": [
+                                    "WOLFMOTHER",
+                                    "THE LAST INTERNATIONALE",
+                                    "CLÃ",
+                                    "BLIND ZERO",
+                                    "DAPUNKSPORTIF",
+                                    "THEM FLYING MONKEYS",
+                                    "THIS PENGUIN CAN FLY",
+                                    "THE TWIST CONNECTION",
+                                    "CORRER ANDAR",
+                                    "NOISE AT VALVE"
+                        ],
+                        "imagem": "img/festival-04-rock-no-rio-febras.jpg"
+            },
+            {
+                        "id": 5,
+                        "nome": "L'Agosto",
+                        "cidade": "Guimarães",
+                        "distrito": "Braga",
+                        "coords": [
+                                    41.4376,
+                                    -8.2965
+                        ],
+                        "dataInicio": "2026-07-30",
+                        "dataFim": "2026-08-01",
+                        "instagram": "https://www.instagram.com/festival_lagosto",
+                        "cartaz": [
+                                    "BLACK WIZARDS",
+                                    "RIZAN SAID",
+                                    "ELLA NOR + MOGNO",
+                                    "LUST FOR YOUTH",
+                                    "DJ K SETS",
+                                    "AXES",
+                                    "ZETA",
+                                    "BONS RAPAZES"
+                        ],
+                        "imagem": "img/festival-05-l-agosto.jpg"
+            },
+            {
+                        "id": 6,
+                        "nome": "Mucho Flow",
+                        "cidade": "Guimarães",
+                        "distrito": "Braga",
+                        "coords": [
+                                    41.444,
+                                    -8.296
+                        ],
+                        "dataInicio": "2026-10-29",
+                        "dataFim": "2026-10-31",
+                        "instagram": "https://www.instagram.com/muchoflowfestival",
+                        "cartaz": [
+                                    "bloodsports",
+                                    "Dagmar Zuniga",
+                                    "gyrofield",
+                                    "Jana Horn",
+                                    "Kavari",
+                                    "Liim",
+                                    "Mandy",
+                                    "Indiana",
+                                    "My New Band Believe"
+                        ],
+                        "imagem": "img/festival-06-mucho-flow.jpg"
+            },
+            {
+                        "id": 7,
+                        "nome": "Lisb-On",
+                        "cidade": "Lisboa",
+                        "distrito": "Lisboa",
+                        "coords": [
+                                    38.729,
+                                    -9.154
+                        ],
+                        "dataInicio": "2026-07-03",
+                        "dataFim": "2026-07-04",
+                        "instagram": "https://www.instagram.com/lisbon_jardimsonoro",
+                        "cartaz": [
+                                    "ADAM TEN",
+                                    "ASTOE",
+                                    "BEN SIMS",
+                                    "CAMELPHAT",
+                                    "CATARINA SILVA",
+                                    "MARIA CALLAPEZ",
+                                    "CRUZ",
+                                    "DAN GHENACIA",
+                                    "DYED SOUNDOROM",
+                                    "FONZI",
+                                    "HNRQ",
+                                    "KÖLSCH",
+                                    "LIL'E",
+                                    "MAGA",
+                                    "MARBON",
+                                    "RODHAD",
+                                    "MARY B",
+                                    "NIBUS",
+                                    "PITCHO",
+                                    "OGAZÓN",
+                                    "SOUNDEALER",
+                                    "VITOR BATISTA",
+                                    "ZE SALVADOR",
+                                    "ADRIANA RUAS",
+                                    "ANFISA LETYAGO",
+                                    "ANNA",
+                                    "BASHKKA",
+                                    "CUBA",
+                                    "MIGUEL NERY",
+                                    "DVDE",
+                                    "FOLAMOUR",
+                                    "HELIO HENRIQ (ZB)",
+                                    "KATE ZUBOK",
+                                    "JOEY",
+                                    "KERRI CHANDLER",
+                                    "KIROLLUS",
+                                    "KLINKLOP",
+                                    "KOKESHI",
+                                    "NICO WAM",
+                                    "SHANTI CELESTE",
+                                    "SVEN VÄTH",
+                                    "TEMUDO",
+                                    "THIAGO GUSELINI",
+                                    "TOMÁS VIEIRA",
+                                    "WHITENOISE"
+                        ],
+                        "imagem": "img/festival-07-lisb-on.jpg"
+            },
+            {
+                        "id": 8,
+                        "nome": "Festival Aqui Ao Lado",
+                        "cidade": "Massamá, Sintra",
+                        "distrito": "Lisboa",
+                        "coords": [
+                                    38.7566,
+                                    -9.273
+                        ],
+                        "dataInicio": "2026-07-03",
+                        "dataFim": "2026-07-05",
+                        "instagram": "https://www.instagram.com/festivalaquiaolado",
+                        "cartaz": [
+                                    "MAQUINA.",
+                                    "VAIAPRAIA",
+                                    "IBSXJAUR",
+                                    "CANALZERO",
+                                    "GABRE",
+                                    "FOSSA",
+                                    "VASCO RIBEIRO & OS CLANDESTINOS",
+                                    "MARIANNE",
+                                    "CUL-DE-SAC",
+                                    "SUBMARINO",
+                                    "DJ STAYFLO",
+                                    "DJ INEZ",
+                                    "DJ DODO"
+                        ],
+                        "imagem": "img/festival-08-festival-aqui-ao-lado.jpg"
+            },
+            {
+                        "id": 9,
+                        "nome": "Kalorama",
+                        "cidade": "Parque da Bela Vista, Lisboa",
+                        "distrito": "Lisboa",
+                        "coords": [
+                                    38.747,
+                                    -9.124
+                        ],
+                        "dataInicio": "2026-08-28",
+                        "dataFim": "2026-08-30",
+                        "instagram": "https://www.instagram.com/meokalorama",
+                        "cartaz": [
+                                    "ROBBIE WILLIAMS",
+                                    "INTERPOL",
+                                    "MARO",
+                                    "ANNA VON HAUSSWOLFF",
+                                    "FOLK BITCH TRIO",
+                                    "MS. LAURYN HILL",
+                                    "WYCLEF JEAN",
+                                    "YG MARLEY",
+                                    "ZION MARLEY",
+                                    "RAVYN LENAE",
+                                    "VINCE STAPLES",
+                                    "BRUNO PERNADAS",
+                                    "JOSHUA IDEHEN",
+                                    "RAQUEL MARTINS",
+                                    "DEFTONES",
+                                    "TURNSTILE",
+                                    "HIGH VIS",
+                                    "PEACHES",
+                                    "TRAVO",
+                                    "GRACE JONES",
+                                    "JUDELINE",
+                                    "MELODY'S ECHO CHAMBER",
+                                    "ANGINE DE POITRINE",
+                                    "A SUL",
+                                    "YASIIN BEY X TALIB KWELI - BLACK STAR",
+                                    "UNKNOWN MORTAL ORCHESTRA",
+                                    "CRIOLO",
+                                    "AMARO & DINO",
+                                    "FEMME FALAFEL",
+                                    "TYLER BALLGAME",
+                                    "CLIPSE",
+                                    "FREDDIE GIBBS + THE ALCHEMIST",
+                                    "WEDNESDAY",
+                                    "PANIC SHACK",
+                                    "PELADOS",
+                                    "BUDINO",
+                                    "HUNEE",
+                                    "LOLA HARO B2B ROMAN FLÜGEL",
+                                    "NATHAN FAKE (LIVE)",
+                                    "VIEGAS",
+                                    "MIND ENTERPRISES",
+                                    "HIROKO YAMAMURA",
+                                    "HORSE MEAT DISCO",
+                                    "MÁRIO VALENTE",
+                                    "SUCHI",
+                                    "DJ LYCOX",
+                                    "DJ MARFOX",
+                                    "HELIOFOXX B2B DIONYNG",
+                                    "NÍDIA",
+                                    "O GHETTÃO",
+                                    "SOUNDPRETÁ"
+                        ],
+                        "imagem": "img/festival-09-kalorama.jpg"
+            },
+            {
+                        "id": 10,
+                        "nome": "Paredes de Coura",
+                        "cidade": "Paredes de Coura",
+                        "distrito": "Viana do Castelo",
+                        "coords": [
+                                    41.911,
+                                    -8.5645
+                        ],
+                        "dataInicio": "2026-08-12",
+                        "dataFim": "2026-08-15",
+                        "instagram": "https://www.instagram.com/vodafoneparedesdecoura",
+                        "cartaz": [
+                                    "KNEECAP",
+                                    "WET LEG",
+                                    "CITIAT",
+                                    "THE HORRORS",
+                                    "GETDOWN SERVICES",
+                                    "GREG FREEMAN",
+                                    "VESTÍGIO",
+                                    "COWBOY",
+                                    "FIRST BREATH AFTER COMA",
+                                    "SALVADOR SOBRAL",
+                                    "CAPITÃO FAUSTO",
+                                    "HORSEGIRL",
+                                    "UNIVERSITY",
+                                    "MIRAMAR",
+                                    "UNDERWORLD",
+                                    "HERMANOS GUTIÉRREZ",
+                                    "ALDOUS HARDING",
+                                    "KURT VILE & THE VIOLATORS",
+                                    "PALE JAY",
+                                    "WU LYF",
+                                    "SHOW ME THE BODY",
+                                    "BASSVICTIM",
+                                    "FRIKO",
+                                    "TOMODE",
+                                    "A GAROTA NÃO",
+                                    "MILHANAS",
+                                    "M.I.A.",
+                                    "BLOC PARTY",
+                                    "BENJAMIN CLEMENTINE",
+                                    "CAROLINA DURANTE",
+                                    "JOY (ORBISON)",
+                                    "VENDREDI SUR MER",
+                                    "MARUJA",
+                                    "RYAN DAVIS & THE ROADHOUSE BAND",
+                                    "TERRAPLANA",
+                                    "STRAWBERRY GUY",
+                                    "SÉRGIO GODINHO & OS ASSESSORES COM AMIGOS",
+                                    "NOKO WOI",
+                                    "AMYL AND THE SNIFFERS",
+                                    "THUNDERCAT",
+                                    "PATRICK WATSON (SOLO PIANO)",
+                                    "MEUTE",
+                                    "CATE LE BON",
+                                    "SOPHIA CHABL",
+                                    "HUDSON FREEMAN",
+                                    "MARIE DAVIDSON DJ SET",
+                                    "PROSTITUTE",
+                                    "DAME AREA",
+                                    "JULIA MESTRE",
+                                    "NOISERV"
+                        ],
+                        "imagem": "img/festival-10-paredes-de-coura.jpg"
+            },
+            {
+                        "id": 11,
+                        "nome": "Neopop",
+                        "cidade": "Viana do Castelo",
+                        "distrito": "Viana do Castelo",
+                        "coords": [
+                                    41.689,
+                                    -8.837
+                        ],
+                        "dataInicio": "2026-08-06",
+                        "dataFim": "2026-08-08",
+                        "instagram": "https://www.instagram.com/neopopfestival",
+                        "cartaz": [
+                                    "Adiel B2B Quest",
+                                    "Alex FX",
+                                    "Ana Pacheco B2B Mingote",
+                                    "Ben Klock B2B Rødhåd",
+                                    "BITA B2B Patrick Mason",
+                                    "Cardia B2B Tiago Fragateiro",
+                                    "DJ Gigola",
+                                    "DJ Lynce",
+                                    "Dust Devices Live",
+                                    "Enrica Falqui B2B Ivan Smagghe",
+                                    "Goldie",
+                                    "Héctor Oaks B2B Partiboi69",
+                                    "Indira Paganotto",
+                                    "Johan B2B Vasco Valente",
+                                    "MARTA",
+                                    "Mathew Jonson Live",
+                                    "Nina Kraviz",
+                                    "Nuno Forte B2B Tilinhos",
+                                    "RHR",
+                                    "Rita Maomenos",
+                                    "Space Riders",
+                                    "Supermayer",
+                                    "Viktor Flores",
+                                    "Alarico B2B Yanamaste",
+                                    "Ben Sims B2B Chris Liebing",
+                                    "Da Ni B2B Wailers",
+                                    "Daria Kolosova",
+                                    "Diana Oliveira B2B Taxsh",
+                                    "DJ Noub B2B DJ Yazi",
+                                    "DJ Storm",
+                                    "Dubfire",
+                                    "Ellen Allien B2B SALOME",
+                                    "Enrico Sangiuliano",
+                                    "Gustavo B2B Zadig",
+                                    "Helena Hauff B2B M I O G E N",
+                                    "Joseph Capriati B2B Luke Slater",
+                                    "Luísa",
+                                    "Maki",
+                                    "Mix'Elle",
+                                    "NOIA",
+                                    "Octave One Live",
+                                    "Richie Hawtin",
+                                    "DEX EFX XOX",
+                                    "Roundhouse Kick Live",
+                                    "Serginho",
+                                    "Violet",
+                                    "Backbone B2B Jesterr",
+                                    "Bikas B2B Nuno Di Rosso",
+                                    "Chlär",
+                                    "Cruz B2B Zé Salvador",
+                                    "DANA NADA & DANIDANE",
+                                    "David Moreira B2B Klin Klop",
+                                    "Dax J",
+                                    "FJAAK x KINK Live",
+                                    "Frank Maurel B2B Josh Wink",
+                                    "Freskitos",
+                                    "Jeff Mills",
+                                    "Jiggy B2B The Advent",
+                                    "KOLO55",
+                                    "Lewis Fautzi Live",
+                                    "ORBE B2B RUUR",
+                                    "Paco Osuna",
+                                    "Peter Mør B2B Sepyrus",
+                                    "Rui Vargas",
+                                    "Solar",
+                                    "The Martinez Brothers"
+                        ],
+                        "imagem": "img/festival-11-neopop.jpg"
+            },
+            {
+                        "id": 12,
+                        "nome": "Bonds",
+                        "cidade": "Porto",
+                        "distrito": "Porto",
+                        "coords": [
+                                    41.15,
+                                    -8.62
+                        ],
+                        "dataInicio": "2026-09-19",
+                        "dataFim": "2026-09-19",
+                        "instagram": "https://www.instagram.com/bonds_festival",
+                        "cartaz": [],
+                        "imagem": "img/festival-12-bonds.jpg"
+            },
+            {
+                        "id": 13,
+                        "nome": "Indie Music Fest",
+                        "cidade": "Baltar - Paredes",
+                        "distrito": "Porto",
+                        "coords": [
+                                    41.1945,
+                                    -8.3764
+                        ],
+                        "dataInicio": "2026-09-03",
+                        "dataFim": "2026-09-05",
+                        "instagram": "https://www.instagram.com/indiemusicfest",
+                        "cartaz": [
+                                    "BEATRIZ PESSOA",
+                                    "ELA JAGUAR",
+                                    "EVOLES",
+                                    "FEMME FALAFEL",
+                                    "JEPARDS",
+                                    "NUNCA MATES O MANDARIM",
+                                    "RAPAZ EGO",
+                                    "THEM FLYING MONKEYS",
+                                    "VAIAPRAIA",
+                                    "WAROUT",
+                                    "BARDINO",
+                                    "BEN&G",
+                                    "ELIAS",
+                                    "EXPRESSO TRANSATLÂNTICO",
+                                    "THE GREEN BIN",
+                                    "IBSXJAUR",
+                                    "LÉZARD",
+                                    "SOMA PLEASE (UK/PT)",
+                                    "TENDENCY",
+                                    "XTINTO"
+                        ],
+                        "imagem": "img/festival-13-indie-music-fest.jpg"
+            },
+            {
+                        "id": 14,
+                        "nome": "Bajonca Rock Fest",
+                        "cidade": "Valadares, S. Pedro do Sul, Viseu",
+                        "distrito": "Viseu",
+                        "coords": [
+                                    40.76,
+                                    -8.06
+                        ],
+                        "dataInicio": "2026-07-10",
+                        "dataFim": "2026-07-11",
+                        "instagram": "https://www.instagram.com/bajoncarockfest",
+                        "cartaz": [
+                                    "UNDEAD",
+                                    "WET CACTUS",
+                                    "FOSCOR",
+                                    "SPEEDEMON",
+                                    "BESTA",
+                                    "LÓSTREGOS",
+                                    "CRUZEIRO",
+                                    "MURMUR",
+                                    "JARDA",
+                                    "RAGEFUL",
+                                    "EL SAGUARO",
+                                    "DANGER MACHINE",
+                                    "SPIRAL SPUTNIK"
+                        ],
+                        "imagem": "img/festival-14-bajonca-rock-fest.jpg"
+            },
+            {
+                        "id": 15,
+                        "nome": "FMM sines",
+                        "cidade": "Sines",
+                        "distrito": "Setúbal",
+                        "coords": [
+                                    37.9561,
+                                    -8.8712
+                        ],
+                        "dataInicio": "2026-07-17",
+                        "dataFim": "2026-07-25",
+                        "instagram": "https://www.instagram.com/fmm_sines",
+                        "cartaz": [
+                                    "A Garota Não",
+                                    "Aïbouche By Khalil Epi",
+                                    "A’ma Mon Amour",
+                                    "Et Oued Abda",
+                                    "Bruno Pernadas",
+                                    "Calle Mambo",
+                                    "Duques Do Precariado",
+                                    "Emilio Maret",
+                                    "Filipe Sambado",
+                                    "Isam Elias",
+                                    "Julian Maizer",
+                                    "The Uprising",
+                                    "Komono Nº1",
+                                    "Antónia Mussa",
+                                    "La Niña",
+                                    "Lavieir",
+                                    "Le Trio Lubrano",
+                                    "20 Springs",
+                                    "La Kati",
+                                    "Madde Kuti",
+                                    "Mariaa Signor",
+                                    "Nana Benz Du Togo",
+                                    "One Rusty Band",
+                                    "Orquestra Akokán",
+                                    "Otto",
+                                    "Paqui Ríos",
+                                    "Pedro Da Linha",
+                                    "Resso",
+                                    "Ees Do Mundo",
+                                    "Rs Produções",
+                                    "Saad Touny",
+                                    "Super Parquet",
+                                    "Tablao De Tango",
+                                    "Tamikrest",
+                                    "TC & The Groove Family",
+                                    "The Cavemen.",
+                                    "The Legendary Tigerman",
+                                    "Tolstoys",
+                                    "Unfaced Space Garden",
+                                    "Vitu Valera",
+                                    "Vitório Solamé",
+                                    "Yakuza"
+                        ],
+                        "imagem": "img/festival-15-fmm-sines.jpg"
+            },
+            {
+                        "id": 16,
+                        "nome": "Cooperativa Fest",
+                        "cidade": "Montijo",
+                        "distrito": "Setúbal",
+                        "coords": [
+                                    38.7067,
+                                    -8.9739
+                        ],
+                        "dataInicio": "2026-07-17",
+                        "dataFim": "2026-07-18",
+                        "instagram": "https://www.instagram.com/cooperativafest",
+                        "cartaz": [
+                                    "Beatriz Roque",
+                                    "She Pleasures Herself",
+                                    "DJ Balakov",
+                                    "Persona77",
+                                    "Walter Walter",
+                                    "Bruno Celta",
+                                    "Maquina DJ Set",
+                                    "Travo",
+                                    "Linger"
+                        ],
+                        "imagem": "img/festival-16-cooperativa-fest.jpg"
+            },
+            {
+                        "id": 17,
+                        "nome": "Bons Sons",
+                        "cidade": "Cem Soldos, Tomar",
+                        "distrito": "Santarém",
+                        "coords": [
+                                    39.5878,
+                                    -8.4552
+                        ],
+                        "dataInicio": "2026-08-06",
+                        "dataFim": "2026-08-09",
+                        "instagram": "https://www.instagram.com/festival_bonssons",
+                        "cartaz": [
+                                    "Seara",
+                                    "Luca Argel",
+                                    "Xullaji",
+                                    "Rita Redshoes",
+                                    "MXGPU",
+                                    "Cacique'97",
+                                    "Lavoisier",
+                                    "Coro Polifónico da Pedreira",
+                                    "Quinta do Bill",
+                                    "Jorge Cruz",
+                                    "Mães Solteiras",
+                                    "Fidju Kitxora",
+                                    "Miss Universo",
+                                    "Rossana",
+                                    "Pedro Da Linha",
+                                    "A Sul",
+                                    "Them Flying Monkeys",
+                                    "Romeu Bairos",
+                                    "Victor Torpedo and The Pop Kids",
+                                    "CRUA",
+                                    "Máximo",
+                                    "Xau Xau Dodô",
+                                    "TT Syndicate",
+                                    "Jonas",
+                                    "Luta Livre",
+                                    "Mondo Mia",
+                                    "Yakuza",
+                                    "La Família Gitana",
+                                    "Rita Cortezão",
+                                    "Lisa Sereno",
+                                    "Líquen",
+                                    "Cremalheira do Apocalipse",
+                                    "Marquise",
+                                    "O Marta",
+                                    "Cortada",
+                                    "O Mau Olhado",
+                                    "Calcutá",
+                                    "800 Gondomar",
+                                    "Claiana",
+                                    "Natércia Lameiro",
+                                    "ACID ACID",
+                                    "Alarido",
+                                    "Iuri Oliveira",
+                                    "Pauliteiras de Miranda do Douro",
+                                    "Catarina Silva",
+                                    "Brandos Costumes",
+                                    "Baile Festeiro",
+                                    "Ana Markl",
+                                    "Sons do Lagar com Coro da Cura",
+                                    "Suma",
+                                    "Cancioneiro de Benfica",
+                                    "Serigosa"
+                        ],
+                        "imagem": "img/festival-17-bons-sons.jpg"
+            },
+            {
+                        "id": 18,
+                        "nome": "Vinho, Folar e Rock n Roll",
+                        "cidade": "Valpaços",
+                        "distrito": "Vila Real",
+                        "coords": [
+                                    41.6067,
+                                    -7.3134
+                        ],
+                        "dataInicio": "2026-07-03",
+                        "dataFim": "2026-07-04",
+                        "instagram": "https://www.instagram.com/vinho_folar_e_rocknroll",
+                        "cartaz": [
+                                    "Baleia Baleia Baleia",
+                                    "Mata-Ratos",
+                                    "Open Session",
+                                    "Clóvis Brown",
+                                    "Crianças ao Poder",
+                                    "Punks Rurais",
+                                    "DJ's Curador Musical",
+                                    "Júllia Poell",
+                                    "Blash",
+                                    "PadarNagana",
+                                    "The Nancy Spungen",
+                                    "Seventh Plague",
+                                    "Playa Desmayo",
+                                    "Tiago Noia",
+                                    "Sarronco",
+                                    "DJ's Sá No Comments"
+                        ],
+                        "imagem": "img/festival-18-vinho-folar-e-rock-n-roll.jpg"
+            },
+            {
+                        "id": 19,
+                        "nome": "Tom de Festa - Associação Cultural e Recreativa de Tondela",
+                        "cidade": "Tondela",
+                        "distrito": "Viseu",
+                        "coords": [
+                                    40.516,
+                                    -8.081
+                        ],
+                        "dataInicio": "2026-07-07",
+                        "dataFim": "2026-07-11",
+                        "instagram": "https://www.instagram.com/acert_tondela",
+                        "cartaz": [
+                                    "João Palavra",
+                                    "Richard Bona",
+                                    "The Legendary Tigerman",
+                                    "Omar",
+                                    "Evaa",
+                                    "PAUS",
+                                    "Quinteto Violado",
+                                    "Nomfusi",
+                                    "Miss Universo",
+                                    "Francisca Urbano"
+                        ],
+                        "imagem": null
+            },
+            {
+                        "id": 20,
+                        "nome": "Zigurfest",
+                        "cidade": "Lamego",
+                        "distrito": "Viseu",
+                        "coords": [
+                                    41.0958,
+                                    -7.8064
+                        ],
+                        "dataInicio": "2026-07-25",
+                        "dataFim": "2026-07-27",
+                        "instagram": "https://www.instagram.com/zigurfest",
+                        "cartaz": [
+                                    "AIRES",
+                                    "ALNORFI",
+                                    "CLARISSE E OS DESVIADOS",
+                                    "CZNK",
+                                    "DAT",
+                                    "LA FAMÍLIA GITANA",
+                                    "LESMA",
+                                    "MAGUALDE",
+                                    "PLANO TRIFÁSICO",
+                                    "PRADO",
+                                    "RIVA MUTI",
+                                    "TRIBO IMPROVISO & AMIGOS",
+                                    "VASCO ALVES"
+                        ],
+                        "imagem": "img/festival-20-zigurfest.jpg"
+            },
+            {
+                        "id": 21,
+                        "nome": "Ocupar a Velga",
+                        "cidade": "Valezim, Seia, Serra da Estrela",
+                        "distrito": "Guarda",
+                        "coords": [
+                                    40.3541,
+                                    -7.6385
+                        ],
+                        "dataInicio": "2026-08-03",
+                        "dataFim": "2026-08-08",
+                        "instagram": "https://www.instagram.com/ocuparavelga",
+                        "cartaz": [],
+                        "imagem": null
+            },
+            {
+                        "id": 22,
+                        "nome": "EntreTons",
+                        "cidade": "Sala Mouco, Porto",
+                        "distrito": "Porto",
+                        "coords": [
+                                    41.1442,
+                                    -8.6062
+                        ],
+                        "dataInicio": "2026-07-17",
+                        "dataFim": "2026-07-17",
+                        "instagram": "https://www.instagram.com/entretonsfest",
+                        "cartaz": [
+                                    "Ganso",
+                                    "Bonança",
+                                    "Ultimos Romanticos",
+                                    "Ordenado Minimo"
+                        ],
+                        "imagem": "img/festival-22-entretons.jpg"
+            },
+            {
+                        "id": 23,
+                        "nome": "Filho Único",
+                        "cidade": "Lisboa",
+                        "distrito": "Lisboa",
+                        "coords": [
+                                    38.71,
+                                    -9.145
+                        ],
+                        "dataInicio": "2026-06-18",
+                        "dataFim": "2026-06-28",
+                        "instagram": "https://www.instagram.com/filhounicolisboa",
+                        "cartaz": [],
+                        "imagem": "img/festival-23-filho-unico.jpg"
+            },
+            {
+                        "id": 24,
+                        "nome": "entretanto",
+                        "cidade": "Alcanena",
+                        "distrito": "Santarém",
+                        "coords": [
+                                    39.46,
+                                    -8.68
+                        ],
+                        "dataInicio": "2026-07-03",
+                        "dataFim": "2026-07-05",
+                        "instagram": "https://www.instagram.com/festival.entretanto",
+                        "cartaz": [
+                                    "DJ Mr Lopez",
+                                    "Catarina Filipe",
+                                    "Mizzy Miles",
+                                    "Gin Party Sound System",
+                                    "DJ Mais do Mesmo",
+                                    "Edmundo Inácio",
+                                    "Karetus"
+                        ],
+                        "imagem": "img/festival-24-entretanto.jpg"
+            },
+            {
+                        "id": 25,
+                        "nome": "Vapor",
+                        "cidade": "Entroncamento",
+                        "distrito": "Santarém",
+                        "coords": [
+                                    39.4647,
+                                    -8.4735
+                        ],
+                        "dataInicio": "2026-09-12",
+                        "dataFim": "2026-09-14",
+                        "instagram": "https://www.instagram.com/festivalvapor",
+                        "cartaz": [],
+                        "imagem": null
+            },
+            {
+                        "id": 26,
+                        "nome": "Sons no Parque",
+                        "cidade": "Alijó",
+                        "distrito": "Vila Real",
+                        "coords": [
+                                    41.276,
+                                    -7.474
+                        ],
+                        "dataInicio": "2026-07-17",
+                        "dataFim": "2026-07-18",
+                        "instagram": "https://www.instagram.com/sonsnoparque",
+                        "cartaz": [
+                                    "The Last Internationale (USA)",
+                                    "Jackie Venson (USA)",
+                                    "Travo",
+                                    "Ida Nielsen & The Funkbots",
+                                    "Datcha Mandala",
+                                    "Opus Kink"
+                        ],
+                        "imagem": "img/festival-26-sons-no-parque.jpg"
+            },
+            {
+                        "id": 27,
+                        "nome": "Seixal Terno",
+                        "cidade": "Seixal",
+                        "distrito": "Setúbal",
+                        "coords": [
+                                    38.64,
+                                    -9.1
+                        ],
+                        "dataInicio": "2026-07-04",
+                        "dataFim": "2026-07-04",
+                        "instagram": "https://www.instagram.com/seixal_terno",
+                        "cartaz": [
+                                    "Francisco Fontes",
+                                    "Marta Fonseca",
+                                    "Rapaz Ego",
+                                    "Unsafe Space Garden"
+                        ],
+                        "imagem": "img/festival-27-seixal-terno.jpg"
+            },
+            {
+                        "id": 28,
+                        "nome": "Yard",
+                        "cidade": "Avenida António Xavier Lima, 2925, Quinta do Anjo, Lisboa",
+                        "distrito": "Setúbal",
+                        "coords": [
+                                    38.566,
+                                    -8.93
+                        ],
+                        "dataInicio": "2026-07-25",
+                        "dataFim": "2026-07-25",
+                        "instagram": "https://www.instagram.com/yard.pt",
+                        "cartaz": [
+                                    "Disclosure DJ Set"
+                        ],
+                        "imagem": "img/festival-28-yard.jpg"
+            },
+            {
+                        "id": 29,
+                        "nome": "Frequência Abissal",
+                        "cidade": "Quinta da Líria, Castelo Branco",
+                        "distrito": "Castelo Branco",
+                        "coords": [
+                                    39.82,
+                                    -7.49
+                        ],
+                        "dataInicio": "2026-06-26",
+                        "dataFim": "2026-06-26",
+                        "instagram": "https://www.instagram.com/frequencia.abissal",
+                        "cartaz": [
+                                    "Subtil",
+                                    "Vato x Convidados",
+                                    "MC AK",
+                                    "DJ Kendown",
+                                    "DJ Magic Kid",
+                                    "DJ Sahasrara"
+                        ],
+                        "imagem": "img/festival-29-frequencia-abissal.jpg"
+            },
+            {
+                        "id": 30,
+                        "nome": "Nascentes Fontes",
+                        "cidade": "Aldeia das Fontes, Leiria",
+                        "distrito": "Leiria",
+                        "coords": [
+                                    39.825,
+                                    -8.76
+                        ],
+                        "dataInicio": "2026-07-01",
+                        "dataFim": "2026-07-05",
+                        "instagram": "https://www.instagram.com/nascentes_fontes",
+                        "cartaz": [],
+                        "imagem": "img/festival-30-nascentes-fontes.jpg"
+            },
+            {
+                        "id": 31,
+                        "nome": "Contrasta",
+                        "cidade": "Fortaleza Cortinas de São Francisco, Valença",
+                        "distrito": "Viana do Castelo",
+                        "coords": [
+                                    42.03,
+                                    -8.64
+                        ],
+                        "dataInicio": "2026-07-10",
+                        "dataFim": "2026-07-11",
+                        "instagram": "https://www.instagram.com/festivalcontrasta",
+                        "cartaz": [
+                                    "Mundo Segundo & Sam the Kid",
+                                    "Papillon",
+                                    "Loner Johnny",
+                                    "Carminho",
+                                    "Yerai Cortés",
+                                    "Nouvelle Vague"
+                        ],
+                        "imagem": "img/festival-31-contrasta.jpg"
+            },
+            {
+                        "id": 32,
+                        "nome": "Vinculum",
+                        "cidade": "Mondim de Basto",
+                        "distrito": "Vila Real",
+                        "coords": [
+                                    41.41,
+                                    -7.95
+                        ],
+                        "dataInicio": "2026-07-17",
+                        "dataFim": "2026-07-19",
+                        "instagram": "https://www.instagram.com/vinculum.pt",
+                        "cartaz": [
+                                    "1morning",
+                                    "Aïg",
+                                    "Aurora Halal",
+                                    "Backbone",
+                                    "Dasha Rush",
+                                    "Doid Live",
+                                    "Ferro",
+                                    "C90",
+                                    "Francisca Urbano B2B Johan",
+                                    "Freddy K",
+                                    "Garçon",
+                                    "Interbelieve",
+                                    "James Grouper",
+                                    "Kia",
+                                    "Konduku",
+                                    "Marco Shuttle",
+                                    "MARRØN",
+                                    "Pariah",
+                                    "Rita Silva Live",
+                                    "Ruar",
+                                    "Sepyres"
+                        ],
+                        "imagem": "img/festival-32-vinculum.jpg"
+            },
+            {
+                        "id": 33,
+                        "nome": "Barrelas Summer Fest",
+                        "cidade": "Vila Nova de Paiva",
+                        "distrito": "Viseu",
+                        "coords": [
+                                    40.83,
+                                    -7.73
+                        ],
+                        "dataInicio": "2026-07-24",
+                        "dataFim": "2026-07-25",
+                        "instagram": "https://www.instagram.com/barrelassummerfest",
+                        "cartaz": [
+                                    "APOCALYPTICA",
+                                    "JET",
+                                    "XUTOS & PONTAPÉS",
+                                    "CALLE DEL RUIDO",
+                                    "SUPERNOVA",
+                                    "MORCHEEBA",
+                                    "DEUS",
+                                    "SLOW J",
+                                    "LINDA MARTINI",
+                                    "ENA PÁ 2000",
+                                    "GLOCKENWISE"
+                        ],
+                        "imagem": "img/festival-33-barrelas-summer-fest.jpg"
+            }
+];
 
         let map, markerClusterGroup;
         let markersMap = {};
@@ -347,52 +1447,196 @@
 
             data.forEach(fest => {
                 const marker = L.marker(fest.coords, { icon: customIcon });
-                
-                // Estrutura do Cartaz Futuro Adicionada (.poster-container escondido por agora)
-                let popupHtml = `
-                    <div class="p-2 min-w-[240px]">
-                        <div id="poster-${fest.id}" class="poster-container hidden w-full h-32 bg-zinc-800 rounded-lg mb-3 bg-cover bg-center shadow-inner border border-zinc-700"></div>
-                        <h3 class="text-base font-bold text-white mb-1 flex items-center justify-between">${fest.nome}</h3>
-                        <p class="text-xs text-[#1DB954] font-semibold mb-3"><i class="fa-solid fa-location-dot"></i> ${fest.cidade}, ${fest.distrito}</p>
-                        
-                        <div class="space-y-1 text-xs text-zinc-300 mb-4 bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/50">
-                            <div><span class="text-zinc-500">📅 Datas:</span> <span class="font-medium text-white">${formatarDataDupla(fest.dataInicio, fest.dataFim)}</span></div>
-                        </div>
-                        
-                        <div class="flex flex-col gap-2">
-                `;
-popupHtml += `
-${fest.artistas ? `
-<div class="text-xs text-zinc-300 bg-zinc-800/50 p-2 rounded-lg border border-zinc-700/50 mb-2">
-    🎤 ${fest.artistas}
-</div>
-` : ''}
-`;
-                if (fest.instagram) {
-                    // Instagram links diretamente da base de dados (suporta o formato original ou só o arroba)
-                    const igLink = fest.instagram.startsWith('http') ? fest.instagram : `https://instagram.com/${fest.instagram.replace('@', '')}`;
-                    popupHtml += `
-                        <a href="${igLink}" target="_blank" 
-                           class="w-full text-center bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
-                           <i class="fa-brands fa-instagram"></i> Instagram Oficial
-                        </a>
-                    `;
-                }
-
-                popupHtml += `
-                            <a href="https://www.google.com/maps/search/?api=1&query=${fest.coords[0]},${fest.coords[1]}" target="_blank" 
-                               class="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
-                               <i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps
-                            </a>
-                        </div></div>
-                `;
-                
-                marker.bindPopup(popupHtml);
+                marker.bindPopup(buildPopupHtml(fest), { maxWidth: 320, minWidth: 280 });
                 marker.on('click', () => highlightCardInList(fest.id));
 
                 markerClusterGroup.addLayer(marker);
                 markersMap[fest.id] = marker;
             });
+        }
+
+        // Constrói o HTML do popup: logótipo + detalhes, lista de artistas, separador Viagem
+        function buildPopupHtml(fest) {
+            // --- Logótipo (60x60, cantos arredondados, com fallback se a imagem falhar) ---
+            const logoHtml = fest.imagem
+                ? `<img src="${fest.imagem}" alt="${fest.nome}" class="festival-logo"
+                        onerror="this.outerHTML='<div class=\\'festival-logo-placeholder\\'><i class=\\'fa-solid fa-image\\'></i></div>'">`
+                : `<div class="festival-logo-placeholder"><i class="fa-solid fa-music"></i></div>`;
+
+            // --- Lista de artistas como tags ---
+            let artistasHtml = '';
+            if (fest.cartaz && fest.cartaz.length > 0) {
+                const tags = fest.cartaz.map(a => `<span class="artist-tag">${a}</span>`).join('');
+                artistasHtml = `
+                    <div class="mt-3">
+                        <p class="text-[10px] uppercase tracking-wider text-zinc-500 font-semibold mb-1.5 flex items-center gap-1">
+                            <i class="fa-solid fa-music text-[#1DB954]"></i> Cartaz (${fest.cartaz.length})
+                        </p>
+                        <div class="artist-tag-list">${tags}</div>
+                    </div>
+                `;
+            }
+
+            // --- Link Instagram / site ---
+            let instagramHtml = '';
+            if (fest.instagram) {
+                const igLink = fest.instagram.startsWith('http') ? fest.instagram : `https://instagram.com/${fest.instagram.replace('@', '')}`;
+                instagramHtml = `
+                    <a href="${igLink}" target="_blank" 
+                       class="w-full text-center bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
+                       <i class="fa-brands fa-instagram"></i> Instagram Oficial
+                    </a>
+                `;
+            }
+
+            // --- Separador "Viagem" (OSRM, calculado on-demand) ---
+            const viagemHtml = `
+                <div class="mt-3">
+                    <button type="button" class="viagem-toggle" id="viagem-toggle-${fest.id}" onclick="toggleViagemPanel(${fest.id})">
+                        <span><i class="fa-solid fa-route text-[#1DB954] mr-1.5"></i> Viagem desde Salvaterra de Magos</span>
+                        <i class="fa-solid fa-chevron-down chevron text-[10px]"></i>
+                    </button>
+                    <div class="viagem-panel" id="viagem-panel-${fest.id}">
+                        <div id="viagem-resultado-${fest.id}" class="mt-2 text-xs text-zinc-400">
+                            <div class="flex items-center gap-2 py-2"><span class="viagem-spinner"></span> A calcular rota via OSRM...</div>
+                        </div>
+                        <input type="number" min="0" step="0.10" class="portagem-input" id="portagem-${fest.id}"
+                               placeholder="€ Custo de portagens (preenchimento manual)"
+                               value="${portagensManual[fest.id] ?? ''}"
+                               oninput="portagensManual[${fest.id}] = this.value;">
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="p-2" style="width: 280px;">
+                    <div class="flex items-start gap-3">
+                        ${logoHtml}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-sm font-bold text-white leading-tight mb-1">${fest.nome}</h3>
+                            <p class="text-xs text-[#1DB954] font-semibold mb-1"><i class="fa-solid fa-location-dot"></i> ${fest.cidade}, ${fest.distrito}</p>
+                            <p class="text-[11px] text-zinc-400">📅 ${formatarDataDupla(fest.dataInicio, fest.dataFim)}</p>
+                        </div>
+                    </div>
+
+                    ${artistasHtml}
+
+                    <div class="flex flex-col gap-2 mt-3">
+                        ${instagramHtml}
+                        <a href="https://www.google.com/maps/search/?api=1&query=${fest.coords[0]},${fest.coords[1]}" target="_blank" 
+                           class="w-full text-center bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-1.5 px-3 rounded-lg text-xs flex items-center justify-center gap-2 transition-colors">
+                           <i class="fa-solid fa-map-location-dot"></i> Abrir no Google Maps
+                        </a>
+                    </div>
+
+                    ${viagemHtml}
+                </div>
+            `;
+        }
+
+        // Guarda os valores de portagem inseridos manualmente, em memória (id -> valor)
+        const portagensManual = {};
+        // Cache de rotas OSRM já calculadas, para não repetir chamadas (id -> { autoestrada, nacional })
+        const rotasCache = {};
+
+        function toggleViagemPanel(id) {
+            const toggleBtn = document.getElementById(`viagem-toggle-${id}`);
+            const panel = document.getElementById(`viagem-panel-${id}`);
+            const isOpen = panel.classList.contains('open');
+
+            if (isOpen) {
+                panel.classList.remove('open');
+                toggleBtn.classList.remove('open');
+                return;
+            }
+
+            panel.classList.add('open');
+            toggleBtn.classList.add('open');
+
+            if (rotasCache[id]) {
+                renderRotaResultado(id, rotasCache[id]);
+            } else {
+                calcularRotaOSRM(id);
+            }
+        }
+
+        // Calcula a rota Salvaterra de Magos -> festival via OSRM (Autoestrada vs Estradas Nacionais)
+        async function calcularRotaOSRM(id) {
+            const fest = databaseFestivais.find(f => f.id === id);
+            if (!fest) return;
+
+            const origem = SALVATERRA_COORDS; // [lat, lon]
+            const destino = fest.coords;
+            const coordStr = `${origem[1]},${origem[0]};${destino[1]},${destino[0]}`;
+            const base = 'https://router.project-osrm.org/route/v1/driving/';
+
+            try {
+                const [resAuto, resNac] = await Promise.all([
+                    fetch(`${base}${coordStr}?overview=false`),
+                    fetch(`${base}${coordStr}?overview=false&exclude=motorway`)
+                ]);
+                const [dataAuto, dataNac] = await Promise.all([resAuto.json(), resNac.json()]);
+
+                const autoestrada = (dataAuto.code === 'Ok') ? dataAuto.routes[0] : null;
+                let nacional = (dataNac.code === 'Ok') ? dataNac.routes[0] : null;
+
+                // Se o servidor não suportar 'exclude=motorway' ou devolver rota idêntica, assinala como indisponível
+                if (nacional && autoestrada && Math.abs(nacional.distance - autoestrada.distance) < 50) {
+                    nacional = null;
+                }
+
+                const resultado = { autoestrada, nacional };
+                rotasCache[id] = resultado;
+                renderRotaResultado(id, resultado);
+            } catch (err) {
+                const container = document.getElementById(`viagem-resultado-${id}`);
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-red-400 text-[11px] py-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Não foi possível calcular a rota (sem ligação ao servidor OSRM).
+                        </div>`;
+                }
+            }
+        }
+
+        function formatarDistancia(metros) {
+            return (metros / 1000).toFixed(0) + ' km';
+        }
+        function formatarDuracao(segundos) {
+            const horas = Math.floor(segundos / 3600);
+            const minutos = Math.round((segundos % 3600) / 60);
+            return horas > 0 ? `${horas}h ${minutos}min` : `${minutos}min`;
+        }
+
+        function renderRotaResultado(id, { autoestrada, nacional }) {
+            const container = document.getElementById(`viagem-resultado-${id}`);
+            if (!container) return;
+
+            if (!autoestrada) {
+                container.innerHTML = `<div class="text-red-400 text-[11px] py-1">Rota não encontrada via OSRM.</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="viagem-table">
+                    <thead>
+                        <tr><th>Opção</th><th>Distância</th><th>Tempo</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fa-solid fa-road text-[#1DB954]"></i> Autoestrada</td>
+                            <td>${formatarDistancia(autoestrada.distance)}</td>
+                            <td>${formatarDuracao(autoestrada.duration)}</td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-signs-post text-amber-400"></i> Est. Nacionais</td>
+                            <td>${nacional ? formatarDistancia(nacional.distance) : '—'}</td>
+                            <td>${nacional ? formatarDuracao(nacional.duration) : '—'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-[9px] text-zinc-600 mt-1">Rotas calculadas via OSRM (Open Source Routing Machine).</p>
+            `;
         }
 
         function renderListCards(data) {
@@ -417,18 +1661,12 @@ ${fest.artistas ? `
                 card.innerHTML = `
                     <div>
                         <div class="flex items-start justify-between gap-2 mb-1">
-                            <h4 class="font-bold text-white group-hover:text-[#1DB954] transition-colors text-lg mb-1">${fest.nome}</h4>
+                            <h4 class="font-bold text-white group-hover:text-[#1DB954] transition-colors text-sm">${fest.nome}</h4>
                             <span class="text-[10px] font-semibold text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full shrink-0">${fest.distrito}</span>
                         </div>
                         <p class="text-[11px] text-zinc-400 mb-2 flex items-center gap-1">
-                            <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i>
-<span class="font-medium">${fest.cidade}</span>
+                            <i class="fa-solid fa-location-dot text-zinc-600 text-[10px]"></i> ${fest.cidade}
                         </p>
-                    ${fest.artistas ? `
-<p class="text-[11px] text-zinc-500 mb-2 truncate">
-    🎤 ${fest.artistas}
-</p>
-` : ''}
                     </div>
                     <div class="mt-2 pt-2 border-t border-zinc-800 flex items-center justify-between text-[11px] text-[#B3B3B3]">
                         <span class="flex items-center gap-1 font-medium text-white/80"><i class="fa-regular fa-calendar text-[#1DB954]"></i> ${formatarDataDupla(fest.dataInicio, fest.dataFim)}</span>
