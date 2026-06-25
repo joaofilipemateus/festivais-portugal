@@ -1811,9 +1811,26 @@
     initApp();
 
     document.getElementById('btn-lista').addEventListener('click', () => {
-        document.getElementById('painel-filtros').style.display = 'none';
-        document.getElementById('painel-lista').style.display = 'flex';
-    });
+    document.getElementById('painel-filtros').style.display = 'none';
+    document.getElementById('painel-mapa').style.display = 'none';
+    document.getElementById('painel-lista').style.display = 'flex';
+});
+
+document.getElementById('btn-mapa').addEventListener('click', () => {
+    document.getElementById('painel-filtros').style.display = 'none';
+    document.getElementById('painel-lista').style.display = 'none';
+    document.getElementById('painel-mapa').style.display = 'block';
+
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 200);
+});
+
+document.getElementById('btn-filtros').addEventListener('click', () => {
+    document.getElementById('painel-lista').style.display = 'none';
+    document.getElementById('painel-mapa').style.display = 'none';
+    document.getElementById('painel-filtros').style.display = 'flex';
+});
 };
     </script>
     <!-- Navegação Mobile -->
