@@ -1804,7 +1804,10 @@
                 targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         }
-
+document.getElementById('btn-lista').addEventListener('click', () => {
+    document.getElementById('painel-filtros').style.display = 'none';
+    document.getElementById('painel-lista').style.display = 'flex';
+});
         window.onload = initApp;
     </script>
     <!-- Navegação Mobile -->
